@@ -3,7 +3,7 @@ ExtensionType: 1
 Name: Packet Purifier
 RepoName: packet-purifier
 ScreenVersion: 1.2.0
-SerialVersion: 1
+SerialVersion: 2
 MinPlatformVersion: 23
 ProOnly: False
 Author: Isacaya
