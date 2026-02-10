@@ -1,19 +1,25 @@
-<p>PacketPurifier is a Burp Suite extension designed to identify influential elements of a packet (parameters, cookies, headers) that influence server responses. The extension sends each request multiple times to establish a baseline. It then removes each element one by one, observing changes in the response compared to the baseline. Analysis results are displayed in the Results panel, and a streamlined request with only influential elements is sent to Repeater.</p>
+<p>
+  Packet Purifier identifies which request elements (parameters, cookies, and headers) influence server responses. By
+  sending multiple baseline requests to establish expected behavior, it systematically removes each element and compares
+  the resulting response against the baseline to determine which elements are influential.
+</p>
 
 <h2>Features</h2>
-
 <ul>
-<li><strong>Element Filtering:</strong> PacketPurifier includes an option to select specific elements (Parameters, Cookies, Headers) for analysis.</li>
-<li><strong>Adjustable Number of Baselines:</strong> The number of baselines used for comparison can be adjusted between 2 to 10 to increase the analysis accuracy.</li>
-<li><strong>Various Baseline Establishment Criteria:</strong> The extension identifies values that change with every request (like timestamps, CSRF tokens) and removes them while establishing the baseline. Two normalization methods are provided:</li>
-  <ul>
-  <li><code class=InlineCode>Basic (default)</code>: This mode removes entire lines in the response that show changes during the baselines establishment.</li>
-  <li><code class=InlineCode>Accurate</code>: This mode precisely identifies and removes only the variable parts of a response when establishing the baseline. This methods performance improves with an increase in the number of baseline requests.</li>
-  </ul>
+  <li>Automatically sends a minimized request containing only influential elements to Repeater</li>
+  <li>Selectively analyze specific element types (parameters, cookies, headers) or all elements together</li>
+  <li>Configure the number of baseline requests (2-10) to improve detection accuracy</li>
+  <li>Choose between Basic normalization (removes entire dynamic response lines) or Accurate normalization (removes only
+    variable portions of lines) when establishing baselines</li>
+  <li>View detailed request and response data for each identified influential element</li>
 </ul>
 
 <h2>Usage</h2>
-
-<p>To use PacketPurifier, send the request packet you wish to analyze to the extension via the context menu, then start Analyze Request. The analysis results can be checked in the Results and Details panels.</p>
-
-<p>Please note that elements that do not have an impact or are not reflected in the response cannot be identified. This could potentially limit its effectiveness when testing for blind vulnerabilities.</p>
+<ol>
+  <li>Right-click on any request in Burp and select "Send to Packet Purifier" from the context menu</li>
+  <li>In the Packet Purifier tab, configure the analysis settings (element types to test, normalization method, and
+    number of baseline requests)</li>
+  <li>Click "Analyze Request" to begin the analysis</li>
+  <li>Review the results table to see which elements caused response changes when removed</li>
+  <li>Check the minimized request in Repeater containing only the influential elements</li>
+</ol>

@@ -6,8 +6,8 @@ ScreenVersion: 1.2.0
 SerialVersion: 1
 MinPlatformVersion: 23
 ProOnly: False
-Author: isacaya
-ShortDescription: PacketPurifier is a Burp Suite extension that identifies influential elements (parameters, cookies, headers) in request packets by comparing responses upon removal of each element.
+Author: Isacaya
+ShortDescription: Identify influential elements (parameters, cookies, headers) in requests by comparing responses upon removal of each element.
 EntryPoint: PacketPurifier.jar
 BuildCommand: ./gradlew build
 SupportedProducts: Pro, Community
