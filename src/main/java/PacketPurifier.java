@@ -32,6 +32,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class PacketPurifier implements BurpExtension, ContextMenuItemsProvider, ExtensionUnloadingHandler {
+    private static final Color ANALYZE_BUTTON_COLOR = Color.decode("#FF6633");
+
     private MontoyaApi api;
     private DefaultTableModel tableModel;
     private JProgressBar progressBar;
@@ -130,6 +132,8 @@ public class PacketPurifier implements BurpExtension, ContextMenuItemsProvider, 
 
         // Buttons
         analyzeButton = new JButton("Analyze Request");
+        analyzeButton.setBackground(ANALYZE_BUTTON_COLOR);
+        analyzeButton.setToolTipText("Analyze request and send the Minimized packet to Repeater.");
         analyzeButton.addActionListener(e -> analyzeRequestFromEditor());
 
         clearButton = new JButton("Clear");
@@ -430,7 +434,6 @@ public class PacketPurifier implements BurpExtension, ContextMenuItemsProvider, 
                 SwingUtilities.invokeLater(() -> {
                     updateProgress(finalTotalTasks, finalTotalTasks);
                     notificationLabel.setText("Analysis complete. Minimized packet sent to Repeater.");
-                    new Timer(2000, e -> notificationLabel.setText("")).start();
                     analyzeButton.setEnabled(true);
                     clearButton.setEnabled(true);
                 });
