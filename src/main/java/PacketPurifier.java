@@ -109,7 +109,7 @@ public class PacketPurifier implements BurpExtension, ContextMenuItemsProvider, 
         mainPanel.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
 
         // Toolbar
-        JPanel toolbar = new JPanel(new FlowLayout(FlowLayout.LEFT, 5, 0));
+        JPanel toolbar = new JPanel(new WrapLayout(FlowLayout.LEFT, 5, 5));
 
         // Filter dropdown
         JLabel filterLabel = new JLabel("Analyze:");
@@ -133,6 +133,24 @@ public class PacketPurifier implements BurpExtension, ContextMenuItemsProvider, 
         // Buttons
         analyzeButton = new JButton("Analyze Request");
         analyzeButton.setBackground(ANALYZE_BUTTON_COLOR);
+        analyzeButton.setOpaque(true);
+        analyzeButton.setContentAreaFilled(true);
+        analyzeButton.setRolloverEnabled(false);
+        analyzeButton.setForeground(getDefaultAnalyzeForeground());
+        analyzeButton.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseEntered(MouseEvent e) {
+                if (analyzeButton.isEnabled()) {
+                    analyzeButton.setForeground(createSubtleHoverColor(getDefaultAnalyzeForeground()));
+                }
+            }
+
+            @Override
+            public void mouseExited(MouseEvent e) {
+                analyzeButton.setForeground(getDefaultAnalyzeForeground());
+            }
+        });
+        analyzeButton.addPropertyChangeListener("enabled", event -> analyzeButton.setForeground(getDefaultAnalyzeForeground()));
         analyzeButton.setToolTipText("Analyze request and send the Minimized packet to Repeater.");
         analyzeButton.addActionListener(e -> analyzeRequestFromEditor());
 
@@ -529,6 +547,32 @@ public class PacketPurifier implements BurpExtension, ContextMenuItemsProvider, 
         });
     }
 
+    private Color getDefaultAnalyzeForeground() {
+        Color lookAndFeelColor = UIManager.getColor("Button.foreground");
+        if (lookAndFeelColor != null) {
+            return lookAndFeelColor;
+        }
+        return new JButton().getForeground();
+    }
+
+    private Color createSubtleHoverColor(Color baseColor) {
+        if (baseColor == null) {
+            return Color.BLACK;
+        }
+        int brightness = (baseColor.getRed() * 299 + baseColor.getGreen() * 587 + baseColor.getBlue() * 114) / 1000;
+        if (brightness < 128) {
+            return blendColor(baseColor, Color.WHITE, 0.25f);
+        }
+        return blendColor(baseColor, Color.BLACK, 0.15f);
+    }
+
+    private Color blendColor(Color from, Color to, float amount) {
+        int red = Math.round(from.getRed() + (to.getRed() - from.getRed()) * amount);
+        int green = Math.round(from.getGreen() + (to.getGreen() - from.getGreen()) * amount);
+        int blue = Math.round(from.getBlue() + (to.getBlue() - from.getBlue()) * amount);
+        return new Color(red, green, blue);
+    }
+
     private boolean hasSignificantImpact(HttpResponse original, HttpResponse modified) {
         if (original.statusCode() != modified.statusCode()) {
             return true;
@@ -599,5 +643,90 @@ public class PacketPurifier implements BurpExtension, ContextMenuItemsProvider, 
         String prefix = firstLine.substring(0, prefixLen);
         String postfix = firstLine.substring(firstLine.length() - postfixLen);
         return new PrefixPostfixPair(prefix, postfix);
+    }
+
+    private static class WrapLayout extends FlowLayout {
+        WrapLayout(int align, int hgap, int vgap) {
+            super(align, hgap, vgap);
+        }
+
+        @Override
+        public Dimension preferredLayoutSize(Container target) {
+            return layoutSize(target, true);
+        }
+
+        @Override
+        public Dimension minimumLayoutSize(Container target) {
+            Dimension minimum = layoutSize(target, false);
+            minimum.width -= getHgap() + 1;
+            return minimum;
+        }
+
+        private Dimension layoutSize(Container target, boolean preferred) {
+            synchronized (target.getTreeLock()) {
+                int targetWidth = target.getSize().width;
+                Container container = target;
+                while (container.getParent() != null && targetWidth == 0) {
+                    container = container.getParent();
+                    targetWidth = container.getSize().width;
+                }
+
+                if (targetWidth == 0) {
+                    targetWidth = Integer.MAX_VALUE;
+                }
+
+                int hgap = getHgap();
+                int vgap = getVgap();
+                Insets insets = target.getInsets();
+                int horizontalInsetsAndGap = insets.left + insets.right + (hgap * 2);
+                int maxWidth = targetWidth - horizontalInsetsAndGap;
+
+                Dimension dim = new Dimension(0, 0);
+                int rowWidth = 0;
+                int rowHeight = 0;
+
+                int memberCount = target.getComponentCount();
+                for (int i = 0; i < memberCount; i++) {
+                    Component component = target.getComponent(i);
+                    if (!component.isVisible()) {
+                        continue;
+                    }
+
+                    Dimension size = preferred ? component.getPreferredSize() : component.getMinimumSize();
+                    if (rowWidth + size.width > maxWidth) {
+                        addRow(dim, rowWidth, rowHeight);
+                        rowWidth = 0;
+                        rowHeight = 0;
+                    }
+
+                    if (rowWidth != 0) {
+                        rowWidth += hgap;
+                    }
+
+                    rowWidth += size.width;
+                    rowHeight = Math.max(rowHeight, size.height);
+                }
+
+                addRow(dim, rowWidth, rowHeight);
+
+                dim.width += horizontalInsetsAndGap;
+                dim.height += insets.top + insets.bottom + (vgap * 2);
+
+                Container scrollPane = SwingUtilities.getAncestorOfClass(JScrollPane.class, target);
+                if (scrollPane != null && target.isValid()) {
+                    dim.width -= hgap + 1;
+                }
+
+                return dim;
+            }
+        }
+
+        private void addRow(Dimension dim, int rowWidth, int rowHeight) {
+            dim.width = Math.max(dim.width, rowWidth);
+            if (dim.height > 0) {
+                dim.height += getVgap();
+            }
+            dim.height += rowHeight;
+        }
     }
 }
